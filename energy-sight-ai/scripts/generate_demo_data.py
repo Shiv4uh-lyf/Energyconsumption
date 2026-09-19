@@ -46,7 +46,7 @@ def generate_demo_data(
     annual = 0.4 * np.cos(2 * np.pi * t / (24 * 365) - np.pi)  # peaks at start/end of year
     
     # --- Weekly seasonality (lower on weekends) ---
-    dow = timestamps.dayofweek  # 0=Mon, 6=Sun
+    dow = timestamps.dayofweek.to_numpy()  # 0=Mon, 6=Sun
     weekly_profile = np.where(dow >= 5, -0.25, 0.1)  # weekends lower
     
     # --- Daily profile (realistic 24h shape) ---
