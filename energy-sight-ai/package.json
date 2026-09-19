@@ -1,0 +1,13 @@
+{
+  "name": "energysight-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "bash start_render.sh"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
