@@ -50,7 +50,7 @@ def generate_demo_data(
     weekly_profile = np.where(dow >= 5, -0.25, 0.1)  # weekends lower
     
     # --- Daily profile (realistic 24h shape) ---
-    hour = timestamps.hour
+   hour = timestamps.hour.to_numpy()
     # Morning ramp, midday plateau, evening peak, overnight trough
     daily = (
         0.4 * np.exp(-((hour - 18) ** 2) / 8)   # evening peak at 18:00
