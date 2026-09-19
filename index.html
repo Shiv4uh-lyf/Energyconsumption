@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EnerSight AI — Application Launcher</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
+    }
+    .card {
+      background: rgba(17, 24, 39, 0.8);
+      border: 1px solid rgba(31, 41, 55, 0.8);
+      backdrop-filter: blur(16px);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(20, 184, 166, 0.15);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(20, 184, 166, 0.1);
+      color: #2dd4bf;
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    p {
+      color: #9ca3af;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #14b8a6, #06b6d4);
+      color: #030712;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(20, 184, 166, 0.4);
+      margin-bottom: 20px;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(20, 184, 166, 0.6);
+    }
+    .note {
+      font-size: 12px;
+      color: #6b7280;
+      background: rgba(31, 41, 55, 0.5);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(55, 65, 81, 0.5);
+    }
+    .cmd {
+      color: #2dd4bf;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="badge">ENERGYSIGHT AI PIPELINE</div>
+    <h1>Futuristic Energy Intelligence Command</h1>
+    <p>
+      EnerSight AI is a full-stack Next.js + FastAPI application running with machine learning forecasting engines.
+    </p>
+
+    <a href="http://localhost:3000" class="btn">
+      ⚡ Open App Interface (http://localhost:3000)
+    </a>
+
+    <div class="note">
+      💡 <strong>Note:</strong> If the link above does not open, make sure you ran <span class="cmd">start_app.bat</span> in terminal to start the Next.js frontend & FastAPI backend servers!
+    </div>
+  </div>
+
+  <script>
+    // Auto-redirect to Next.js dashboard after 2 seconds if server is running
+    fetch('http://localhost:3000')
+      .then(() => {
+        window.location.href = 'http://localhost:3000';
+      })
+      .catch(() => {
+        console.log('Next.js dev server not detected yet on port 3000.');
+      });
+  </script>
+</body>
+</html>
