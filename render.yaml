@@ -33,9 +33,9 @@ services:
         fromService:
           type: web
           name: energysight-backend
-          property: url
+          property: hostport
       - key: BACKEND_INTERNAL_URL
         fromService:
           type: web
           name: energysight-backend
-          property: url
+          property: hostport

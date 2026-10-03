@@ -1,13 +1,13 @@
 /** @type {import('next').NextConfig} */
 
-// Normalise the backend URL: ensure it always has an http/https prefix.
-// Render's `property: url` returns a full https:// URL, but guard
-// against bare `host:port` values just in case.
+// Render's `fromService` with `property: hostport` gives "hostname:port"
+// (no protocol). Internal Render service-to-service traffic uses plain http.
+// Locally it falls back to http://127.0.0.1:8000.
 function getBackendUrl() {
   const raw = process.env.BACKEND_INTERNAL_URL || '';
   if (!raw) return 'http://127.0.0.1:8000';
   if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-  return `https://${raw}`;
+  return `http://${raw}`; // prepend http:// for internal Render hostport
 }
 
 const BACKEND_URL = getBackendUrl();
