@@ -23,10 +23,11 @@ interface FeatureImportanceChartProps {
 }
 
 export function FeatureImportanceChart({
-  features,
+  features = [],
   modelName = 'XGBoost',
 }: FeatureImportanceChartProps) {
-  const sorted = [...features].sort((a, b) => b.importance - a.importance).slice(0, 10);
+  const safeFeatures = Array.isArray(features) ? features : [];
+  const sorted = [...safeFeatures].sort((a, b) => b.importance - a.importance).slice(0, 10);
 
   return (
     <div className="w-full bg-graphite-950 p-4 rounded-xl border border-graphite-800/80 shadow-xl">

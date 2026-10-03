@@ -21,11 +21,15 @@ interface HourlyPattern {
 }
 
 interface PatternHeatmapProps {
-  hourlyData: HourlyPattern[];
+  hourlyData?: HourlyPattern[];
+  patternData?: any;
 }
 
-export function PatternHeatmap({ hourlyData }: PatternHeatmapProps) {
-  const formatted = hourlyData.map((d) => {
+export function PatternHeatmap({ hourlyData, patternData }: PatternHeatmapProps) {
+  const rawData = hourlyData || patternData?.hourly_profile || patternData?.hourly || [];
+  const safeData = Array.isArray(rawData) ? rawData : [];
+
+  const formatted = safeData.map((d) => {
     const std = d.std ?? 0;
     const minVal = d.min ?? Math.max(0, d.mean - std);
     const maxVal = d.max ?? d.mean + std;

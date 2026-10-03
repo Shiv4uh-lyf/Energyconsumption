@@ -13,15 +13,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark scroll-smooth">
-      <body className="bg-graphite-950 text-graphite-100 font-sans antialiased min-h-screen selection:bg-teal-500/30 selection:text-teal-200 overflow-x-hidden">
+    <html lang="en" className="scroll-smooth">
+      <body className="bg-[#e6e9ef] text-[#121212] font-sans antialiased min-h-screen selection:bg-zinc-900 selection:text-white overflow-x-hidden ambient-silk-bg p-3 sm:p-6">
         
-        {/* Futuristic Background Atmospheric Glows */}
+        {/* Soft Ambient Clay Light Orbs */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/3 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-          <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px] opacity-25" />
+          <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-white/70 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-zinc-300/40 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 left-1/3 w-[600px] h-[600px] bg-slate-200/50 rounded-full blur-3xl" />
         </div>
 
         <AppShell>{children}</AppShell>

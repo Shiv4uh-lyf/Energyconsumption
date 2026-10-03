@@ -11,7 +11,6 @@ import {
   Tooltip,
   CartesianGrid,
   Legend,
-  ReferenceLine
 } from 'recharts';
 
 interface ForecastDataPoint {
@@ -30,13 +29,13 @@ interface ForecastChartProps {
 }
 
 export function ForecastChart({
-  data,
+  data = [],
   title = 'Load Forecast (kW)',
   height = 360,
   showCI = true,
 }: ForecastChartProps) {
-  const formattedData = data.map((d: any) => {
-    // Normalize CI field names: backend uses lower_bound/upper_bound, chart uses lower_ci/upper_ci
+  const safeData = Array.isArray(data) ? data : [];
+  const formattedData = safeData.map((d: any) => {
     const lower = d.lower_ci ?? d.lower_bound ?? undefined;
     const upper = d.upper_ci ?? d.upper_bound ?? undefined;
     return {
@@ -49,13 +48,13 @@ export function ForecastChart({
   });
 
   return (
-    <div className="w-full bg-graphite-950 p-4 rounded-xl border border-graphite-800/80 shadow-xl">
+    <div className="w-full bg-[#121212] p-5 rounded-2xl border border-zinc-800 shadow-xl text-white">
       {title && (
-        <div className="flex items-center justify-between mb-3 border-b border-graphite-800 pb-2">
-          <h3 className="font-mono text-xs text-graphite-200 uppercase tracking-wider font-semibold">
+        <div className="flex items-center justify-between mb-4 border-b border-zinc-800 pb-3">
+          <h3 className="font-extrabold text-sm text-white uppercase tracking-wider">
             {title}
           </h3>
-          <span className="font-mono text-[10px] text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+          <span className="text-xs font-bold text-teal-300 bg-teal-500/20 px-2.5 py-1 rounded-full border border-teal-500/40">
             {data.length} TIMESTEPS
           </span>
         </div>
@@ -74,23 +73,23 @@ export function ForecastChart({
                 <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0} />
               </linearGradient>
               <linearGradient id="ciGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#2DD4BF" stopOpacity={0.02} />
+                <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#2DD4BF" stopOpacity={0.05} />
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.6} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" opacity={0.6} />
 
             <XAxis
               dataKey="timeStr"
-              stroke="#64748b"
-              tick={{ fontSize: 10, fontFamily: 'monospace' }}
+              stroke="#d4d4d8"
+              tick={{ fontSize: 11, fontWeight: 600, fill: '#e4e4e7' }}
               tickLine={false}
             />
 
             <YAxis
-              stroke="#64748b"
-              tick={{ fontSize: 10, fontFamily: 'monospace' }}
+              stroke="#d4d4d8"
+              tick={{ fontSize: 11, fontWeight: 600, fill: '#e4e4e7' }}
               unit=" kW"
               domain={['auto', 'auto']}
               tickLine={false}
@@ -98,13 +97,14 @@ export function ForecastChart({
 
             <Tooltip
               contentStyle={{
-                backgroundColor: '#0f172a',
-                borderColor: '#14b8a6',
-                borderRadius: '8px',
-                color: '#f8fafc',
+                backgroundColor: '#18181b',
+                borderColor: '#2DD4BF',
+                borderWidth: '1.5px',
+                borderRadius: '12px',
+                color: '#ffffff',
                 fontSize: '12px',
-                fontFamily: 'monospace',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                fontWeight: '600',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
               }}
               formatter={(val: any, name: string) => {
                 if (typeof val === 'number') return [`${val.toFixed(2)} kW`, name];
@@ -113,7 +113,7 @@ export function ForecastChart({
             />
 
             <Legend
-              wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace', paddingTop: '10px' }}
+              wrapperStyle={{ fontSize: '12px', fontWeight: 600, color: '#f4f4f5', paddingTop: '12px' }}
             />
 
             {showCI && (
@@ -130,7 +130,7 @@ export function ForecastChart({
               type="monotone"
               dataKey="actual"
               stroke="#10b981"
-              strokeWidth={2}
+              strokeWidth={2.5}
               fill="url(#actualGrad)"
               name="Actual Consumption"
             />
@@ -138,10 +138,10 @@ export function ForecastChart({
             <Line
               type="monotone"
               dataKey="predicted"
-              stroke="#06b6d4"
-              strokeWidth={2.5}
-              strokeDasharray="4 2"
-              dot={{ r: 2, fill: '#06b6d4' }}
+              stroke="#38bdf8"
+              strokeWidth={3}
+              strokeDasharray="5 3"
+              dot={{ r: 3, fill: '#38bdf8' }}
               name="AI Model Forecast"
             />
           </ComposedChart>

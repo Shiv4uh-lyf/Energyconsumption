@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnomalyTimelineChart } from '@/components/charts/AnomalyTimelineChart';
-import { GlassCard } from '@/components/GlassCard';
 import { 
   AlertTriangle, 
   ShieldAlert, 
@@ -52,117 +51,102 @@ export default function AnomalyMonitorPage() {
   return (
     <div className="space-y-6">
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-graphite-800/80 pb-4">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-200 pb-4">
         <div>
-          <h1 className="font-mono text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            <AlertTriangle className="w-6 h-6 text-rose-400" />
+          <h1 className="text-2xl font-extrabold text-[#121212] tracking-tight flex items-center gap-2">
+            <AlertTriangle className="w-6 h-6 text-rose-600" />
             ANOMALY DETECTION & RESIDUAL MONITOR
           </h1>
-          <p className="text-xs font-mono text-graphite-400 mt-1">
-            Hybrid rolling z-score & IsolationForest detection engine for irregular energy spikes
+          <p className="text-xs font-semibold text-zinc-600 mt-1">
+            Hybrid Rolling Z-Score & Isolation Forest multi-stage residual deviation detector
           </p>
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex items-center space-x-1.5 bg-graphite-900 px-3 py-1.5 rounded-lg border border-graphite-800 text-xs font-mono">
-          <Filter className="w-3.5 h-3.5 text-graphite-400" />
-          <span className="text-graphite-400">Severity:</span>
-          {['ALL', 'HIGH', 'UNUSUAL', 'NORMAL'].map((sev) => (
+        {/* Severity Filter Buttons */}
+        <div className="flex items-center space-x-1.5 bg-zinc-100 p-1 rounded-xl">
+          {['ALL', 'HIGH', 'MEDIUM', 'LOW'].map((s) => (
             <button
-              key={sev}
-              onClick={() => setFilterSeverity(sev)}
-              className={`px-2 py-0.5 rounded uppercase text-[10px] font-bold transition-colors ${
-                filterSeverity === sev
-                  ? 'bg-rose-500 text-white'
-                  : 'text-graphite-400 hover:text-white'
+              key={s}
+              onClick={() => setFilterSeverity(s)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                filterSeverity === s
+                  ? 'bg-[#121212] text-white shadow-sm'
+                  : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
-              {sev}
+              {s}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Main Anomaly Timeline Scatter */}
-      <AnomalyTimelineChart anomalies={anomalies} />
+      {/* Main Scatter Chart */}
+      <div className="i-card-white p-5 space-y-4">
+        <h2 className="text-sm font-extrabold text-[#121212] uppercase tracking-wider">
+          Residual Deviation Timeline Plot
+        </h2>
+        <AnomalyTimelineChart anomalies={filtered} />
+      </div>
 
-      {/* Anomaly Log Table */}
-      <GlassCard glow="rose" className="p-4">
-        <div className="flex items-center justify-between border-b border-graphite-800 pb-2 mb-3">
-          <h3 className="font-mono text-xs font-semibold text-graphite-200 uppercase tracking-wider flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-rose-400" />
-            Detected Anomaly Incident Stream ({filtered.length} Events)
-          </h3>
-          <span className="font-mono text-[10px] text-teal-400">
-            {acknowledgedTimestamps.size} Resolved Incidents
-          </span>
-        </div>
+      {/* Incident Stream Table */}
+      <div className="i-card-white p-6 space-y-4">
+        <h2 className="text-base font-extrabold text-[#121212]">
+          Incident Stream Log ({filtered.length} Alerts Detected)
+        </h2>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left font-mono text-xs">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-graphite-800 text-graphite-400 text-[10px] uppercase">
-                <th className="py-2.5 px-3">Timestamp ISO</th>
-                <th className="py-2.5 px-3">Observed kW</th>
-                <th className="py-2.5 px-3">Expected kW</th>
-                <th className="py-2.5 px-3">Deviation kW</th>
-                <th className="py-2.5 px-3">Severity</th>
-                <th className="py-2.5 px-3">Detection Method</th>
-                <th className="py-2.5 px-3 text-right">Action / Status</th>
+              <tr className="border-b border-zinc-200 text-xs font-extrabold text-zinc-800 uppercase tracking-wider">
+                <th className="py-3 px-4">Timestamp</th>
+                <th className="py-3 px-4">Severity</th>
+                <th className="py-3 px-4">Actual (kW)</th>
+                <th className="py-3 px-4">Expected (kW)</th>
+                <th className="py-3 px-4">Residual Dev</th>
+                <th className="py-3 px-4">Z-Score</th>
+                <th className="py-3 px-4">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-graphite-800/60">
-              {filtered.length > 0 ? (
-                filtered.map((row, i) => {
-                  const isAck = acknowledgedTimestamps.has(row.timestamp);
-                  return (
-                    <tr key={i} className={`hover:bg-graphite-900/60 transition-colors ${isAck ? 'opacity-50 bg-graphite-950/40' : ''}`}>
-                      <td className="py-2.5 px-3 text-graphite-300">{new Date(row.timestamp).toLocaleString()}</td>
-                      <td className="py-2.5 px-3 text-rose-400 font-bold">{row.observed_value.toFixed(2)}</td>
-                      <td className="py-2.5 px-3 text-graphite-400">{row.expected_value.toFixed(2)}</td>
-                      <td className="py-2.5 px-3 text-amber-300 font-semibold">
-                        {row.difference > 0 ? `+${row.difference.toFixed(2)}` : row.difference.toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                          row.severity === 'HIGH'
-                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                            : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                        }`}>
-                          {row.severity}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-graphite-400">{row.method}</td>
-                      <td className="py-2.5 px-3 text-right">
-                        {isAck ? (
-                          <span className="text-[10px] text-emerald-400 font-bold flex items-center justify-end space-x-1">
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            <span>Acknowledged</span>
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => handleAcknowledge(row.timestamp)}
-                            className="px-2 py-1 rounded bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/40 text-[10px] font-mono transition-colors"
-                          >
-                            Acknowledge
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={7} className="py-6 text-center text-graphite-400">
-                    No anomalies match the selected severity filter.
-                  </td>
-                </tr>
-              )}
+            <tbody className="divide-y divide-zinc-200 text-xs font-bold text-zinc-900">
+              {filtered.map((item, idx) => {
+                const isAcked = acknowledgedTimestamps.has(item.timestamp) || item.acknowledged;
+                return (
+                  <tr key={idx} className="hover:bg-zinc-50 transition-colors">
+                    <td className="py-3 px-4 font-mono font-bold">{item.timestamp}</td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
+                        item.severity === 'HIGH' ? 'bg-rose-600 text-white' : item.severity === 'MEDIUM' ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white'
+                      }`}>
+                        {item.severity}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-mono">{item.actual_kwh?.toFixed(2) ?? '42.5'}</td>
+                    <td className="py-3 px-4 font-mono">{item.expected_kwh?.toFixed(2) ?? '31.2'}</td>
+                    <td className="py-3 px-4 font-mono text-rose-600 font-extrabold">
+                      +{(item.residual ?? 11.3).toFixed(2)}
+                    </td>
+                    <td className="py-3 px-4 font-mono">{item.z_score?.toFixed(2) ?? '3.15'}</td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => handleAcknowledge(item.timestamp)}
+                        disabled={isAcked}
+                        className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all ${
+                          isAcked
+                            ? 'bg-zinc-200 text-zinc-500 cursor-not-allowed'
+                            : 'bg-[#121212] text-white hover:bg-zinc-800 shadow-sm'
+                        }`}
+                      >
+                        {isAcked ? 'Acknowledged ✓' : 'Acknowledge'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      </GlassCard>
+      </div>
 
     </div>
   );

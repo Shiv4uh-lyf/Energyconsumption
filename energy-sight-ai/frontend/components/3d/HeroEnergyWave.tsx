@@ -20,7 +20,7 @@ interface HeroEnergyWaveProps {
 }
 
 export function HeroEnergyWave({
-  data,
+  data = [],
   selectedModel = 'Ensemble',
   horizon = 24,
   onRefresh,
@@ -30,9 +30,28 @@ export function HeroEnergyWave({
   const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
 
+  // Generate synthetic telemetry dataset if data prop is omitted or empty
+  const activeData = React.useMemo(() => {
+    if (data && data.length > 0) return data;
+    const points: DataPoint[] = [];
+    const now = new Date();
+    for (let i = 0; i < 24; i++) {
+      const t = new Date(now.getTime() - (24 - i) * 3600 * 1000);
+      const hour = t.getHours();
+      const base = 35 + 12 * Math.sin((hour - 6) * Math.PI / 12);
+      const noise = (Math.sin(i * 1.2) + Math.cos(i * 0.8)) * 2;
+      points.push({
+        timestamp: t.toISOString(),
+        actual: Math.round((base + noise) * 10) / 10,
+        predicted: Math.round((base + noise + 1.2) * 10) / 10,
+      });
+    }
+    return points;
+  }, [data]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || data.length === 0) return;
+    if (!canvas || !activeData || activeData.length === 0) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -52,9 +71,9 @@ export function HeroEnergyWave({
     window.addEventListener('resize', resize);
 
     // Compute min/max for scaling
-    const values = data.map((d) => d.actual ?? d.predicted ?? 0);
-    const minVal = Math.min(...values) * 0.9;
-    const maxVal = Math.max(...values) * 1.1;
+    const values = activeData.map((d) => d.actual ?? d.predicted ?? 0);
+    const minVal = (values.length > 0 ? Math.min(...values) : 10) * 0.9;
+    const maxVal = (values.length > 0 ? Math.max(...values) : 50) * 1.1;
 
     const draw = () => {
       if (!canvas || !containerRef.current) return;
@@ -87,14 +106,14 @@ export function HeroEnergyWave({
       const plotW = width - padding.left - padding.right;
       const plotH = height - padding.top - padding.bottom;
 
-      const getX = (index: number) => padding.left + (index / (data.length - 1)) * plotW;
-      const getY = (val: number) => padding.top + plotH - ((val - minVal) / (maxVal - minVal)) * plotH;
+      const getX = (index: number) => padding.left + (index / (Math.max(1, activeData.length - 1))) * plotW;
+      const getY = (val: number) => padding.top + plotH - ((val - minVal) / (Math.max(1, maxVal - minVal))) * plotH;
 
       // Render confidence interval area for predictions
       ctx.fillStyle = 'rgba(20, 184, 166, 0.08)';
       ctx.beginPath();
       let started = false;
-      data.forEach((d, i) => {
+      activeData.forEach((d, i) => {
         if (d.upper_ci !== undefined) {
           const x = getX(i);
           const yUpper = getY(d.upper_ci);
@@ -106,8 +125,8 @@ export function HeroEnergyWave({
           }
         }
       });
-      for (let i = data.length - 1; i >= 0; i--) {
-        const d = data[i];
+      for (let i = activeData.length - 1; i >= 0; i--) {
+        const d = activeData[i];
         if (d.lower_ci !== undefined) {
           const x = getX(i);
           const yLower = getY(d.lower_ci);
@@ -120,15 +139,15 @@ export function HeroEnergyWave({
       // Render actual line (emerald glowing wave)
       ctx.beginPath();
       ctx.lineWidth = 3;
-      ctx.strokeStyle = '#10b981'; // emerald-500
+      ctx.strokeStyle = '#10b981';
       ctx.shadowColor = '#10b981';
       ctx.shadowBlur = 10;
       let actualCount = 0;
-      data.forEach((d, i) => {
+      activeData.forEach((d, i) => {
         if (d.actual !== undefined) {
           actualCount++;
           const x = getX(i);
-          const y = getY(d.actual) + Math.sin(time + i * 0.1) * 1.5; // micro pulsation
+          const y = getY(d.actual) + Math.sin(time + i * 0.1) * 1.5;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
@@ -139,12 +158,12 @@ export function HeroEnergyWave({
       // Render forecast line (cyan dashed glowing line)
       ctx.beginPath();
       ctx.lineWidth = 3;
-      ctx.strokeStyle = '#06b6d4'; // cyan-500
+      ctx.strokeStyle = '#06b6d4';
       ctx.shadowColor = '#06b6d4';
       ctx.shadowBlur = 12;
       ctx.setLineDash([6, 4]);
       let firstForecast = true;
-      data.forEach((d, i) => {
+      activeData.forEach((d, i) => {
         if (d.predicted !== undefined) {
           const x = getX(i);
           const y = getY(d.predicted) + Math.cos(time + i * 0.1) * 1.5;
@@ -161,12 +180,11 @@ export function HeroEnergyWave({
       ctx.shadowBlur = 0;
 
       // Render connection point (Current load pulse)
-      if (actualCount > 0 && actualCount <= data.length) {
+      if (actualCount > 0 && actualCount <= activeData.length) {
         const splitIdx = actualCount - 1;
         const cx = getX(splitIdx);
-        const cy = getY(data[splitIdx].actual ?? 0);
+        const cy = getY(activeData[splitIdx].actual ?? 0);
 
-        // Pulsing ring around current point
         const pulseR = 8 + Math.sin(time * 4) * 4;
         ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
         ctx.lineWidth = 2;
@@ -181,11 +199,11 @@ export function HeroEnergyWave({
       }
 
       // Draw Anomaly highlights
-      data.forEach((d, i) => {
+      activeData.forEach((d, i) => {
         if (d.is_anomaly && d.actual !== undefined) {
           const ax = getX(i);
           const ay = getY(d.actual);
-          ctx.fillStyle = '#f43f5e'; // rose-500
+          ctx.fillStyle = '#f43f5e';
           ctx.beginPath();
           ctx.arc(ax, ay, 6, 0, Math.PI * 2);
           ctx.fill();

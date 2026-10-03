@@ -26,8 +26,9 @@ interface AnomalyTimelineChartProps {
   anomalies: AnomalyPoint[];
 }
 
-export function AnomalyTimelineChart({ anomalies }: AnomalyTimelineChartProps) {
-  const formatted = anomalies.map((d) => ({
+export function AnomalyTimelineChart({ anomalies = [] }: AnomalyTimelineChartProps) {
+  const safeAnomalies = Array.isArray(anomalies) ? anomalies : [];
+  const formatted = safeAnomalies.map((d) => ({
     ...d,
     timeStr: new Date(d.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     unusualVal: d.severity === 'UNUSUAL' ? d.observed_value : null,

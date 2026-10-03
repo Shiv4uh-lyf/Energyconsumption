@@ -28,10 +28,11 @@ interface ModelComparisonChartProps {
 }
 
 export function ModelComparisonChart({
-  metrics,
+  metrics = [],
   selectedMetric = 'mae',
 }: ModelComparisonChartProps) {
-  const sorted = [...metrics].sort((a, b) => {
+  const safeMetrics = Array.isArray(metrics) ? metrics : [];
+  const sorted = [...safeMetrics].sort((a, b) => {
     if (selectedMetric === 'r2') return b.r2 - a.r2; // higher is better
     return a[selectedMetric] - b[selectedMetric]; // lower is better
   });
