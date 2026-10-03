@@ -60,6 +60,6 @@ echo   SUCCESS! EnerSight AI services are launching.
 echo.
 echo   - Next.js Interface: http://localhost:3000
 echo   - FastAPI Backend:   http://localhost:8000/docs
-echo ============================================================
 echo.
 pause
+echo ============================================================

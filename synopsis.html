@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EnerSight AI — Project Synopsis</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --accent:    #14b8a6;
+    --accent2:   #6366f1;
+    --dark:      #0a0f1a;
+    --card:      #111827;
+    --border:    #1f2937;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --highlight: #f0fdf4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #ffffff;
+    color: #1a202c;
+    font-size: 10.5pt;
+    line-height: 1.6;
+  }
+
+  /* ── COVER HEADER ───────────────────────────────── */
+  .cover {
+    background: linear-gradient(135deg, #0a0f1a 0%, #0f1f2e 50%, #0d1f1a 100%);
+    color: white;
+    padding: 36px 40px 30px;
+    border-radius: 10px;
+    margin-bottom: 26px;
+    position: relative;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(20,184,166,0.18) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .cover-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.5pt;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #14b8a6;
+    background: rgba(20,184,166,0.12);
+    border: 1px solid rgba(20,184,166,0.35);
+    border-radius: 4px;
+    padding: 3px 10px;
+    margin-bottom: 14px;
+  }
+  .cover h1 {
+    font-size: 26pt;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, #ffffff 0%, #a5f3fc 55%, #14b8a6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .cover .subtitle {
+    font-size: 11pt;
+    color: #94a3b8;
+    font-weight: 400;
+    margin-bottom: 22px;
+    position: relative;
+    z-index: 1;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cover-meta-item .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7pt;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .cover-meta-item .value {
+    font-size: 9pt;
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+  .cover-divider {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(20,184,166,0.5), rgba(99,102,241,0.3), transparent);
+    margin: 18px 0;
+  }
+
+  /* ── SECTION TITLES ─────────────────────────────── */
+  .section {
+    margin-bottom: 22px;
+    page-break-inside: avoid;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid #e2e8f0;
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #14b8a6;
+    background: rgba(20,184,166,0.08);
+    border: 1px solid rgba(20,184,166,0.25);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+  .section-title {
+    font-size: 12.5pt;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── ABSTRACT ───────────────────────────────────── */
+  .abstract {
+    background: linear-gradient(135deg, #f0fdfa 0%, #f0f9ff 100%);
+    border-left: 3px solid #14b8a6;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    color: #1e293b;
+    font-size: 10.5pt;
+    line-height: 1.7;
+    margin-bottom: 22px;
+  }
+
+  /* ── KPI CHIPS ROW ──────────────────────────────── */
+  .kpi-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+  .kpi-chip {
+    flex: 1;
+    min-width: 110px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .kpi-chip .kpi-val {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #14b8a6;
+    line-height: 1.1;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .kpi-chip .kpi-lbl {
+    font-size: 7.5pt;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── CARDS GRID ─────────────────────────────────── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 13px 15px;
+  }
+  .card-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-title .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #14b8a6;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .card p, .card li {
+    font-size: 9pt;
+    color: #374151;
+    line-height: 1.55;
+  }
+  .card ul {
+    padding-left: 14px;
+  }
+  .card li { margin-bottom: 2px; }
+
+  /* ── TABLE ──────────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin-bottom: 6px;
+  }
+  thead tr {
+    background: linear-gradient(90deg, #0f172a, #1e293b);
+    color: white;
+  }
+  thead th {
+    padding: 7px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 8.5pt;
+    letter-spacing: 0.04em;
+  }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:nth-child(odd)  { background: #ffffff; }
+  tbody td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #e9ecef;
+    color: #374151;
+    vertical-align: top;
+  }
+  tbody td:first-child { font-weight: 500; color: #0f172a; }
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7pt;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .tag-teal   { background: #ccfbf1; color: #0f766e; }
+  .tag-indigo { background: #e0e7ff; color: #4338ca; }
+  .tag-amber  { background: #fef3c7; color: #b45309; }
+  .tag-rose   { background: #ffe4e6; color: #be123c; }
+  .tag-slate  { background: #f1f5f9; color: #475569; }
+
+  /* ── PIPELINE FLOW ──────────────────────────────── */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .pipe-step {
+    flex: 1;
+    min-width: 80px;
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    padding: 9px 8px;
+    text-align: center;
+    position: relative;
+  }
+  .pipe-step:first-child { border-radius: 8px 0 0 8px; }
+  .pipe-step:last-child  { border-radius: 0 8px 8px 0; }
+  .pipe-step:not(:last-child)::after {
+    content: '▶';
+    position: absolute;
+    right: -9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 8pt;
+    color: #14b8a6;
+    z-index: 2;
+    background: white;
+    padding: 1px 0;
+  }
+  .pipe-step .ps-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7pt;
+    color: #14b8a6;
+    font-weight: 700;
+  }
+  .pipe-step .ps-label {
+    font-size: 8pt;
+    font-weight: 600;
+    color: #0f172a;
+    margin-top: 2px;
+  }
+
+  /* ── TECH STACK PILLS ───────────────────────────── */
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 6px;
+  }
+  .pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.5pt;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .pill-be { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+  .pill-fe { background: #eef2ff; color: #3730a3; border-color: #a5b4fc; }
+  .pill-ml { background: #fff7ed; color: #92400e; border-color: #fcd34d; }
+
+  /* ── DIFFERENTIATORS ────────────────────────────── */
+  .diff-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .diff-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 9.5pt;
+    color: #1e293b;
+    line-height: 1.5;
+  }
+  .diff-list li .icon {
+    font-size: 11pt;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .diff-list li strong { color: #0f172a; }
+
+  /* ── FOOTER ─────────────────────────────────────── */
+  .footer {
+    margin-top: 28px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 8pt;
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .footer .brand {
+    font-weight: 700;
+    color: #14b8a6;
+  }
+
+  /* ── PRINT ──────────────────────────────────────── */
+  @media print {
+    body { font-size: 10pt; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .kpi-chip, .card, .pipe-step, .diff-list li, thead tr {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .section { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="cover-tag">⚡ Project Synopsis · Technical Overview</div>
+  <h1>EnerSight AI</h1>
+  <p class="subtitle">Energy Consumption Forecasting &amp; Intelligence Platform</p>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <span class="label">Domain</span>
+      <span class="value">Energy Intelligence / MLOps</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="label">Stack</span>
+      <span class="value">FastAPI · Next.js 14 · Python 3.10+</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="label">ML Models</span>
+      <span class="value">8 Engines + Adaptive Ensemble</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="label">Deployment</span>
+      <span class="value">Docker · Render · One-Command Launch</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ ABSTRACT -->
+<div class="abstract">
+  <strong>EnerSight AI</strong> is a production-grade, full-stack artificial intelligence platform purpose-built for electricity consumption forecasting, real-time anomaly detection, multi-model benchmarking, and transparent explainability. It combines a Python ML backend — featuring eight rigorously engineered forecasting engines and a hybrid anomaly pipeline — with an interactive Next.js command-center dashboard, delivering a comprehensive energy intelligence solution that goes far beyond a typical single-model prediction script.
+</div>
+
+<!-- ═══════════════════════════════════════════════════ KPIs -->
+<div class="kpi-row">
+  <div class="kpi-chip"><div class="kpi-val">8</div><div class="kpi-lbl">ML Models</div></div>
+  <div class="kpi-chip"><div class="kpi-val">34</div><div class="kpi-lbl">Engineered Features</div></div>
+  <div class="kpi-chip"><div class="kpi-val">2</div><div class="kpi-lbl">Anomaly Algorithms</div></div>
+  <div class="kpi-chip"><div class="kpi-val">8</div><div class="kpi-lbl">Dashboard Pages</div></div>
+  <div class="kpi-chip"><div class="kpi-val">4</div><div class="kpi-lbl">Eval Metrics</div></div>
+  <div class="kpi-chip"><div class="kpi-val">60fps</div><div class="kpi-lbl">3D Visualization</div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 1 -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">01</span>
+    <span class="section-title">ML Pipeline Architecture</span>
+  </div>
+
+  <div class="pipeline">
+    <div class="pipe-step"><div class="ps-num">S1</div><div class="ps-label">Raw Telemetry</div></div>
+    <div class="pipe-step"><div class="ps-num">S2</div><div class="ps-label">Preprocessing</div></div>
+    <div class="pipe-step"><div class="ps-num">S3</div><div class="ps-label">Feature Eng.</div></div>
+    <div class="pipe-step"><div class="ps-num">S4</div><div class="ps-label">Chron. Split</div></div>
+    <div class="pipe-step"><div class="ps-num">S5</div><div class="ps-label">Model Train</div></div>
+    <div class="pipe-step"><div class="ps-num">S6</div><div class="ps-label">Evaluation</div></div>
+    <div class="pipe-step"><div class="ps-num">S7</div><div class="ps-label">Ensemble</div></div>
+    <div class="pipe-step"><div class="ps-num">S8</div><div class="ps-label">API Serve</div></div>
+  </div>
+
+  <div style="margin-top:12px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>What It Does</th>
+          <th>Key Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Preprocessing</td>
+          <td>Hourly resampling, missing value imputation, duplicate removal</td>
+          <td>Strict 1-hour frequency enforcement</td>
+        </tr>
+        <tr>
+          <td>Feature Engineering</td>
+          <td>34 leakage-safe temporal, cyclical, lag &amp; rolling features</td>
+          <td><code>.shift(n)</code> on every lag; rolling windows shifted by 1</td>
+        </tr>
+        <tr>
+          <td>Chronological Split</td>
+          <td>70% Train → 15% Validation → 15% Test in time order</td>
+          <td>No shuffling — prevents temporal data leakage</td>
+        </tr>
+        <tr>
+          <td>Model Training</td>
+          <td>8 independent models trained &amp; serialised via Joblib</td>
+          <td>Unified <code>BaseForecaster</code> interface for all models</td>
+        </tr>
+        <tr>
+          <td>Evaluation</td>
+          <td>MAE, RMSE, MAPE, R², train time, inference latency</td>
+          <td>All metrics computed on held-out test set only</td>
+        </tr>
+        <tr>
+          <td>Ensemble Weighting</td>
+          <td>Inverse-MAE weighted blend across top models</td>
+          <td>Weights derived from validation error — never hardcoded</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 2 -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">02</span>
+    <span class="section-title">Forecasting Engine — 8 Models</span>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Model</th><th>Algorithm Type</th><th>Key Strength</th><th>Intervals</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Naive</td><td>Seasonal (lag 168h)</td><td>Interpretable zero-cost baseline</td><td><span class="tag tag-slate">No</span></td></tr>
+      <tr><td>Ridge Regression</td><td>L2-regularised linear + StandardScaler</td><td>Fast, interpretable seasonal linear model</td><td><span class="tag tag-teal">Yes</span></td></tr>
+      <tr><td>Random Forest</td><td>200-tree bootstrap ensemble</td><td>Non-linear interactions, tree std intervals</td><td><span class="tag tag-teal">Yes</span></td></tr>
+      <tr><td>XGBoost</td><td>Gradient-boosted decision trees</td><td>Best single-model accuracy on tabular data</td><td><span class="tag tag-slate">No</span></td></tr>
+      <tr><td>SARIMA</td><td>SARIMAX (2,1,2)(1,0,1,24)</td><td>Classical seasonal time-series modelling</td><td><span class="tag tag-teal">Yes</span></td></tr>
+      <tr><td>Prophet</td><td>Facebook Prophet (multi-seasonality)</td><td>Daily, weekly, yearly + holiday effects</td><td><span class="tag tag-teal">Yes</span></td></tr>
+      <tr><td>LSTM</td><td>PyTorch 2-layer RNN (seq_len=168)</td><td>Long-range temporal dependencies</td><td><span class="tag tag-slate">No</span></td></tr>
+      <tr><td><strong>Ensemble</strong></td><td><strong>Adaptive inverse-MAE weighted blend</strong></td><td><strong>Best overall; dynamically weighted</strong></td><td><span class="tag tag-teal">Yes</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 3 -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">03</span>
+    <span class="section-title">Anomaly Detection &amp; Explainability</span>
+  </div>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Hybrid Anomaly Detection</div>
+      <ul>
+        <li><strong>Rolling Z-Score</strong> — flags readings deviating &gt;2.5σ (UNUSUAL) or &gt;3.5σ (HIGH) from a 168-hour rolling mean.</li>
+        <li><strong>Isolation Forest</strong> — unsupervised tree model using consumption value, hour-of-day, day-of-week, and rolling statistics as features.</li>
+        <li>Both algorithms run in parallel; results are <strong>deduplicated by timestamp</strong>, keeping the highest severity label per event.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#6366f1"></span>SHAP Explainability</div>
+      <ul>
+        <li><strong>TreeExplainer</strong> for XGBoost &amp; Random Forest — exact Shapley values from tree structure.</li>
+        <li><strong>LinearExplainer</strong> for Ridge Regression — SHAP on scaled coefficient space.</li>
+        <li>Top-20 per-feature mean absolute SHAP contributions surfaced with human-readable descriptions (e.g. <em>"lag_168: same hour last week — strong weekly periodicity"</em>).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 4 -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">04</span>
+    <span class="section-title">Frontend Dashboard — 8 Workstation Pages</span>
+  </div>
+  <table>
+    <thead><tr><th>Page</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>⚡ Overview</td><td>Energy Command Center — real-time KPI cards + 60fps 3D energy surface wave (HTML5 Canvas)</td></tr>
+      <tr><td>📈 Forecast Studio</td><td>Configurable multi-horizon forecasting workstation with engine selector and CSV export</td></tr>
+      <tr><td>🏆 Model Arena</td><td>Out-of-sample benchmark leaderboard comparing MAE, RMSE, MAPE, R², and inference latency</td></tr>
+      <tr><td>📊 Pattern Explorer</td><td>Diurnal 24h load-profile heatmaps and weekday vs. weekend consumption variance analysis</td></tr>
+      <tr><td>🚨 Anomaly Monitor</td><td>Residual timeline scatter plot and live incident log stream with severity classification</td></tr>
+      <tr><td>🧠 AI Energy Analyst</td><td>Deterministic zero-hallucination statistical rule engine — natural-language grid insights without LLM</td></tr>
+      <tr><td>🗄️ Data Health</td><td>Preprocessing audit report, missing-value checks, chronological split visualisation</td></tr>
+      <tr><td>⚙️ Settings</td><td>API endpoint configuration, default engine selection, and manual retraining triggers</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 5 -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">05</span>
+    <span class="section-title">Key Differentiators vs. Typical Prediction Models</span>
+  </div>
+  <ul class="diff-list">
+    <li>
+      <span class="icon">🎯</span>
+      <div><strong>Adaptive Ensemble Weighting</strong> — ensemble weights are computed from actual validation-set MAE at runtime. The best-performing model automatically receives the highest contribution. No hardcoded weights ever.</div>
+    </li>
+    <li>
+      <span class="icon">🔒</span>
+      <div><strong>Guaranteed Leakage Safety</strong> — every lag and rolling feature uses <code>.shift()</code> with positive offsets. The chronological splitter raises a hard error if data is not monotonically time-ordered. Common in research; rare in practice.</div>
+    </li>
+    <li>
+      <span class="icon">🛡️</span>
+      <div><strong>Two-Stage Hybrid Anomaly Detection</strong> — statistical (Rolling Z-Score) and model-based (Isolation Forest) pipelines run independently, covering both distributional and structural anomalies, then merged with severity-aware deduplication.</div>
+    </li>
+    <li>
+      <span class="icon">🧠</span>
+      <div><strong>Full Explainability Loop</strong> — SHAP values per model expose exactly which feature drove each prediction up or down, making forecasts auditable and trustworthy for grid operators.</div>
+    </li>
+    <li>
+      <span class="icon">📐</span>
+      <div><strong>Production Architecture</strong> — not a notebook. Full FastAPI REST backend with Pydantic schemas, Next.js 14 App Router frontend, Docker Compose, Render deployment config, and a single-command launcher (<code>start_app.bat</code>).</div>
+    </li>
+    <li>
+      <span class="icon">📊</span>
+      <div><strong>Live Multi-Metric Benchmarking</strong> — all 8 models are evaluated on the same held-out test set and ranked by MAE, RMSE, MAPE, R², and inference latency simultaneously, with a live leaderboard in the UI.</div>
+    </li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 6 -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">06</span>
+    <span class="section-title">Technology Stack</span>
+  </div>
+  <p style="font-size:9pt; color:#475569; margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em;">Backend</p>
+  <div class="pill-row">
+    <span class="pill pill-be">FastAPI</span>
+    <span class="pill pill-be">Python 3.10+</span>
+    <span class="pill pill-be">Pandas</span>
+    <span class="pill pill-be">NumPy</span>
+    <span class="pill pill-be">Scikit-Learn</span>
+    <span class="pill pill-be">XGBoost</span>
+    <span class="pill pill-be">Statsmodels</span>
+    <span class="pill pill-be">Prophet</span>
+    <span class="pill pill-be">PyTorch</span>
+    <span class="pill pill-be">SHAP</span>
+    <span class="pill pill-be">Joblib</span>
+    <span class="pill pill-be">Pydantic</span>
+  </div>
+  <p style="font-size:9pt; color:#475569; margin:10px 0 8px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em;">Frontend</p>
+  <div class="pill-row">
+    <span class="pill pill-fe">Next.js 14</span>
+    <span class="pill pill-fe">TypeScript</span>
+    <span class="pill pill-fe">TailwindCSS</span>
+    <span class="pill pill-fe">Recharts</span>
+    <span class="pill pill-fe">Framer Motion</span>
+    <span class="pill pill-fe">HTML5 Canvas</span>
+    <span class="pill pill-fe">Axios</span>
+    <span class="pill pill-fe">Lucide React</span>
+  </div>
+  <p style="font-size:9pt; color:#475569; margin:10px 0 8px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em;">Infra &amp; DevOps</p>
+  <div class="pill-row">
+    <span class="pill pill-ml">Docker</span>
+    <span class="pill pill-ml">Docker Compose</span>
+    <span class="pill pill-ml">Render</span>
+    <span class="pill pill-ml">Uvicorn</span>
+    <span class="pill pill-ml">MIT License</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ FOOTER -->
+<div class="footer">
+  <span class="brand">⚡ EnerSight AI</span>
+  <span>Full-Stack Energy Intelligence Platform</span>
+  <span>github · MIT License · Python 3.10+ / Next.js 14</span>
+</div>
+
+</body>
+</html>

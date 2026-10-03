@@ -1,0 +1,41 @@
+# ============================================================
+# EnerSight AI — Render Blueprint
+# Repo root-level render.yaml
+# ============================================================
+
+services:
+  # ── 1. FastAPI Backend ─────────────────────────────────────
+  - type: web
+    name: energysight-backend
+    env: python
+    region: oregon
+    plan: free
+    rootDir: energy-sight-ai/backend
+    buildCommand: pip install -r requirements.txt && python ../scripts/generate_demo_data.py && python ../scripts/train_models.py
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.10.12"
+
+  # ── 2. Next.js Frontend ────────────────────────────────────
+  - type: web
+    name: energysight-frontend
+    env: node
+    region: oregon
+    plan: free
+    rootDir: energy-sight-ai/frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "18"
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: energysight-backend
+          property: hostport
+      - key: BACKEND_INTERNAL_URL
+        fromService:
+          type: web
+          name: energysight-backend
+          property: hostport
