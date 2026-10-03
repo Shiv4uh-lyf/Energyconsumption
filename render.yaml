@@ -28,14 +28,14 @@ services:
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
-        value: "18"
+        value: "20"
       - key: NEXT_PUBLIC_API_URL
         fromService:
           type: web
           name: energysight-backend
-          property: hostport
+          property: url
       - key: BACKEND_INTERNAL_URL
         fromService:
           type: web
           name: energysight-backend
-          property: hostport
+          property: url
