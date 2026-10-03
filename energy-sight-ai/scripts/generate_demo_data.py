@@ -70,6 +70,9 @@ def generate_demo_data(
     noise = RNG.normal(0, 0.08, n)
     consumption = consumption + noise
     
+    # Ensure plain numpy array before fancy indexing (pandas compat fix)
+    consumption = np.array(consumption, dtype=float)
+    
     # --- Add occasional anomaly spikes (for anomaly detection demo) ---
     spike_indices = RNG.choice(n, size=25, replace=False)
     consumption[spike_indices] += RNG.uniform(1.5, 3.0, 25)  # sudden spikes
@@ -97,7 +100,7 @@ def generate_demo_data(
         "rows": len(df),
         "start": str(df["timestamp"].iloc[0]),
         "end": str(df["timestamp"].iloc[-1]),
-        "frequency": "1H",
+        "frequency": "1h",
         "seed": 42,
         "is_demo": True,
     }
