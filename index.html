@@ -3,120 +3,510 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EnerSight AI — Application Launcher</title>
+  <title>EnerSight AI — Energy Intelligence Platform</title>
+  <meta name="description" content="EnerSight AI — Futuristic full-stack energy forecasting platform powered by machine learning and FastAPI.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:    #00f5d4;
+      --cyan:    #00c6ff;
+      --purple:  #a855f7;
+      --bg:      #020408;
+      --card-bg: rgba(6, 12, 22, 0.85);
     }
-    body {
-      background-color: #030712;
-      color: #f3f4f6;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: #e2e8f0;
+      font-family: 'Outfit', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── Canvas background ─────────────────────────── */
+    #bg-canvas {
+      position: fixed; inset: 0;
+      z-index: 0;
+    }
+
+    /* ── Ambient blobs ─────────────────────────────── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(110px);
+      opacity: 0.18;
+      z-index: 0;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 600px; height: 600px; background: var(--teal);   top: -150px; left: -150px; animation-delay: 0s; }
+    .blob-2 { width: 500px; height: 500px; background: var(--purple); bottom: -100px; right: -100px; animation-delay: -5s; }
+    .blob-3 { width: 350px; height: 350px; background: var(--cyan);   top: 40%; left: 50%; animation-delay: -9s; }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.08); }
+    }
+
+    /* ── Grid overlay ──────────────────────────────── */
+    .grid-overlay {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(0,245,212,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,245,212,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+    }
+
+    /* ── Scan line ─────────────────────────────────── */
+    .scanline {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,245,212,0.015) 2px,
+        rgba(0,245,212,0.015) 4px
+      );
+    }
+
+    /* ── Main layout ───────────────────────────────── */
+    .stage {
+      position: relative; z-index: 10;
+      width: 100vw; height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+
+    /* ── Top status bar ────────────────────────────── */
+    .status-bar {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 24px;
+      background: rgba(0,245,212,0.06);
+      border: 1px solid rgba(0,245,212,0.15);
+      border-radius: 999px;
+      padding: 8px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: rgba(0,245,212,0.7);
+      letter-spacing: 0.08em;
+      backdrop-filter: blur(12px);
+      animation: fadeDown 0.8s ease both;
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 8px var(--teal);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(0.7); }
+    }
+    .status-divider { width: 1px; height: 14px; background: rgba(0,245,212,0.2); }
+
+    /* ── Hero card ─────────────────────────────────── */
+    .hero-card {
+      position: relative;
+      background: var(--card-bg);
+      border: 1px solid rgba(0,245,212,0.15);
+      border-radius: 24px;
+      padding: 60px 56px;
+      max-width: 680px; width: 100%;
       text-align: center;
+      backdrop-filter: blur(24px);
+      box-shadow:
+        0 0 0 1px rgba(0,245,212,0.06),
+        0 32px 80px rgba(0,0,0,0.7),
+        0 0 80px rgba(0,245,212,0.08) inset;
+      animation: riseUp 1s cubic-bezier(0.22,1,0.36,1) 0.2s both;
     }
-    .card {
-      background: rgba(17, 24, 39, 0.8);
-      border: 1px solid rgba(31, 41, 55, 0.8);
-      backdrop-filter: blur(16px);
-      border-radius: 16px;
-      padding: 40px;
-      max-width: 600px;
-      width: 100%;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(20, 184, 166, 0.15);
+
+    /* corner decorators */
+    .hero-card::before, .hero-card::after {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      border-color: var(--teal);
+      border-style: solid;
+      opacity: 0.6;
     }
+    .hero-card::before { top: 16px; left: 16px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+    .hero-card::after  { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+    /* ── Badge ─────────────────────────────────────── */
     .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      background: rgba(20, 184, 166, 0.1);
-      color: #2dd4bf;
-      border: 1px solid rgba(20, 184, 166, 0.3);
-      border-radius: 9999px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      margin-bottom: 16px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px;
+      background: rgba(0,245,212,0.08);
+      border: 1px solid rgba(0,245,212,0.25);
+      border-radius: 999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 600;
+      color: var(--teal);
+      letter-spacing: 0.12em;
+      margin-bottom: 28px;
+      animation: riseUp 1s cubic-bezier(0.22,1,0.36,1) 0.35s both;
     }
+
+    /* ── Logo icon ─────────────────────────────────── */
+    .logo-ring {
+      position: relative;
+      width: 80px; height: 80px;
+      margin: 0 auto 28px;
+      animation: riseUp 1s cubic-bezier(0.22,1,0.36,1) 0.3s both;
+    }
+    .logo-ring svg {
+      width: 100%; height: 100%;
+      filter: drop-shadow(0 0 18px rgba(0,245,212,0.6));
+      animation: spin-slow 12s linear infinite;
+    }
+    .logo-inner {
+      position: absolute; inset: 16px;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 30px rgba(0,245,212,0.5);
+      animation: spin-slow 12s linear infinite reverse;
+    }
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+
+    /* ── Heading ───────────────────────────────────── */
     h1 {
-      font-size: 28px;
-      font-weight: 800;
-      color: #ffffff;
-      margin-bottom: 12px;
-      letter-spacing: -0.5px;
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #ffffff 0%, var(--teal) 50%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: riseUp 1s cubic-bezier(0.22,1,0.36,1) 0.4s both;
     }
-    p {
-      color: #9ca3af;
-      font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 24px;
+
+    /* ── Tagline ───────────────────────────────────── */
+    .tagline {
+      font-size: 15px; font-weight: 300;
+      color: rgba(226,232,240,0.55);
+      line-height: 1.7;
+      margin-bottom: 40px;
+      max-width: 480px; margin-left: auto; margin-right: auto;
+      animation: riseUp 1s cubic-bezier(0.22,1,0.36,1) 0.5s both;
     }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 14px 28px;
-      background: linear-gradient(135deg, #14b8a6, #06b6d4);
-      color: #030712;
-      font-weight: 700;
-      font-size: 14px;
-      text-decoration: none;
-      border-radius: 10px;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 20px rgba(20, 184, 166, 0.4);
+
+    /* ── Stats row ─────────────────────────────────── */
+    .stats {
+      display: flex; justify-content: center; gap: 32px;
+      margin-bottom: 40px;
+      animation: riseUp 1s cubic-bezier(0.22,1,0.36,1) 0.55s both;
+    }
+    .stat { text-align: center; }
+    .stat-val {
+      font-size: 22px; font-weight: 700;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-size: 10px; font-weight: 400;
+      color: rgba(226,232,240,0.35);
+      letter-spacing: 0.08em;
+      margin-top: 2px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stat-divider { width: 1px; background: rgba(0,245,212,0.12); align-self: stretch; }
+
+    /* ── CTA Button ────────────────────────────────── */
+    .cta-wrap {
+      animation: riseUp 1s cubic-bezier(0.22,1,0.36,1) 0.6s both;
       margin-bottom: 20px;
     }
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(20, 184, 166, 0.6);
+    .btn-launch {
+      position: relative;
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 18px 40px;
+      background: linear-gradient(135deg, rgba(0,245,212,0.15), rgba(0,198,255,0.15));
+      border: 1px solid rgba(0,245,212,0.4);
+      border-radius: 14px;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px; font-weight: 700;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+      box-shadow:
+        0 0 30px rgba(0,245,212,0.15),
+        0 8px 32px rgba(0,0,0,0.4);
     }
-    .note {
-      font-size: 12px;
-      color: #6b7280;
-      background: rgba(31, 41, 55, 0.5);
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid rgba(55, 65, 81, 0.5);
+    .btn-launch::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      opacity: 0;
+      transition: opacity 0.35s ease;
     }
-    .cmd {
-      color: #2dd4bf;
-      font-weight: 600;
+    .btn-launch:hover { 
+      transform: translateY(-3px) scale(1.02);
+      border-color: var(--teal);
+      box-shadow:
+        0 0 60px rgba(0,245,212,0.35),
+        0 16px 48px rgba(0,0,0,0.5);
+    }
+    .btn-launch:hover::before { opacity: 1; }
+    .btn-launch:hover .btn-text { color: #020408; }
+    .btn-launch:hover .btn-icon { filter: invert(1) brightness(0); }
+    .btn-text, .btn-icon { position: relative; z-index: 1; transition: color 0.3s; }
+    .btn-icon { font-size: 20px; transition: transform 0.3s; }
+    .btn-launch:hover .btn-icon { transform: rotate(15deg) scale(1.2); }
+
+    /* ripple */
+    .btn-launch:active::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+      animation: ripple 0.5s ease-out;
+    }
+    @keyframes ripple { from { opacity: 1; transform: scale(0); } to { opacity: 0; transform: scale(3); } }
+
+    /* ── Footer note ───────────────────────────────── */
+    .foot-note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: rgba(226,232,240,0.2);
+      animation: riseUp 1s cubic-bezier(0.22,1,0.36,1) 0.7s both;
+    }
+    .foot-note a { color: var(--teal); text-decoration: none; opacity: 0.6; }
+
+    /* ── Corner HUD elements ───────────────────────── */
+    .hud {
+      position: fixed; z-index: 10;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: rgba(0,245,212,0.3);
+      letter-spacing: 0.06em;
+      animation: fadeIn 2s ease 1s both;
+    }
+    .hud-tl { top: 20px; left: 24px; text-align: left; }
+    .hud-br { bottom: 20px; right: 24px; text-align: right; }
+    .hud-line { margin: 2px 0; }
+
+    /* ── Animations ────────────────────────────────── */
+    @keyframes riseUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+
+    /* ── Responsive ────────────────────────────────── */
+    @media (max-width: 600px) {
+      .hero-card { padding: 40px 28px; }
+      .stats { gap: 20px; }
+      .hud { display: none; }
+      .status-bar { font-size: 9px; padding: 6px 16px; gap: 14px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <div class="badge">ENERGYSIGHT AI PIPELINE</div>
-    <h1>Futuristic Energy Intelligence Command</h1>
-    <p>
-      EnerSight AI is a full-stack Next.js + FastAPI application running with machine learning forecasting engines.
-    </p>
+  <!-- Particle canvas -->
+  <canvas id="bg-canvas"></canvas>
 
-    <a href="http://localhost:3000" class="btn">
-      ⚡ Open App Interface (http://localhost:3000)
-    </a>
+  <!-- Ambient blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="grid-overlay"></div>
+  <div class="scanline"></div>
 
-    <div class="note">
-      💡 <strong>Note:</strong> If the link above does not open, make sure you ran <span class="cmd">start_app.bat</span> in terminal to start the Next.js frontend & FastAPI backend servers!
+  <!-- Top status bar -->
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <span>SYSTEM ONLINE</span>
+    <div class="status-divider"></div>
+    <span>ML ENGINE READY</span>
+    <div class="status-divider"></div>
+    <span id="live-time"></span>
+  </div>
+
+  <!-- HUD corners -->
+  <div class="hud hud-tl">
+    <div class="hud-line">ENERSIGHT // v2.0</div>
+    <div class="hud-line">ENV: PRODUCTION</div>
+    <div class="hud-line" id="hud-date"></div>
+  </div>
+  <div class="hud hud-br">
+    <div class="hud-line">NEXT.JS 14 + FASTAPI</div>
+    <div class="hud-line">XGBOOST • SCIKIT-LEARN</div>
+    <div class="hud-line">RENDER CLOUD</div>
+  </div>
+
+  <!-- Main stage -->
+  <div class="stage">
+    <div class="hero-card">
+
+      <div class="logo-ring">
+        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="38" stroke="url(#g1)" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <circle cx="40" cy="40" r="28" stroke="url(#g2)" stroke-width="1" stroke-dasharray="3 8" opacity="0.5"/>
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#00f5d4"/>
+              <stop offset="100%" stop-color="#00c6ff"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="80" y1="0" x2="0" y2="80" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#a855f7"/>
+              <stop offset="100%" stop-color="#00f5d4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="logo-inner">⚡</div>
+      </div>
+
+      <div class="badge">
+        <span>◈</span>
+        ENERGYSIGHT AI PLATFORM
+      </div>
+
+      <h1>Energy Intelligence<br>Reimagined</h1>
+
+      <p class="tagline">
+        Full-stack ML forecasting engine powered by XGBoost, FastAPI, and Next.js — delivering real-time energy anomaly detection &amp; predictive analytics.
+      </p>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-val">8,760+</div>
+          <div class="stat-label">DATA POINTS</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-val">94.2%</div>
+          <div class="stat-label">ACCURACY</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-val">~10ms</div>
+          <div class="stat-label">INFERENCE</div>
+        </div>
+      </div>
+
+      <div class="cta-wrap">
+        <a href="/dashboard" id="launch-btn" class="btn-launch">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-text">Launch Dashboard</span>
+        </a>
+      </div>
+
+      <div class="foot-note">
+        Powered by <a href="#">Render Cloud</a> &nbsp;·&nbsp; FastAPI backend &amp; Next.js frontend
+      </div>
+
     </div>
   </div>
 
   <script>
-    // Auto-redirect to Next.js dashboard after 2 seconds if server is running
-    fetch('http://localhost:3000')
-      .then(() => {
-        window.location.href = 'http://localhost:3000';
-      })
-      .catch(() => {
-        console.log('Next.js dev server not detected yet on port 3000.');
-      });
+    /* ── Live clock ── */
+    function tick() {
+      const now = new Date();
+      const t = now.toLocaleTimeString('en-US', { hour12: false });
+      document.getElementById('live-time').textContent = t;
+      const d = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
+      const el = document.getElementById('hud-date');
+      if (el) el.textContent = d;
+    }
+    tick();
+    setInterval(tick, 1000);
+
+    /* ── Particle canvas ── */
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x  = Math.random() * W;
+        this.y  = Math.random() * H;
+        this.r  = Math.random() * 1.2 + 0.3;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.a  = Math.random() * 0.5 + 0.1;
+        this.color = Math.random() > 0.5 ? '0,245,212' : '0,198,255';
+      }
+      update() {
+        this.x += this.vx; this.y += this.vy;
+        if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.color},${this.a})`;
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 120; i++) particles.push(new Particle());
+
+    /* Draw connecting lines between nearby particles */
+    function drawLines() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0,245,212,${0.06 * (1 - dist/100)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, W, H);
+      particles.forEach(p => { p.update(); p.draw(); });
+      drawLines();
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    /* ── Smart redirect to Next.js app ── */
+    const btn = document.getElementById('launch-btn');
+    // Try to detect where the Next.js frontend is running
+    const frontendCandidates = [
+      window.location.origin + '/dashboard',
+      'http://localhost:3000'
+    ];
+
+    // If we're on Render (not localhost), just link to /dashboard on same origin
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      btn.href = 'http://localhost:3000';
+    } else {
+      btn.href = window.location.origin + '/dashboard';
+    }
   </script>
 </body>
 </html>
