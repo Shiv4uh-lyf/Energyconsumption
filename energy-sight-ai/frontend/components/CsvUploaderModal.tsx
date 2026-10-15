@@ -8,9 +8,10 @@ interface CsvUploaderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onUploadSuccess?: () => void;
 }
 
-export function CsvUploaderModal({ isOpen, onClose, onSuccess }: CsvUploaderModalProps) {
+export function CsvUploaderModal({ isOpen, onClose, onSuccess, onUploadSuccess }: CsvUploaderModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<any>(null);
   const [timestampCol, setTimestampCol] = useState<string>('');
@@ -51,6 +52,66 @@ export function CsvUploaderModal({ isOpen, onClose, onSuccess }: CsvUploaderModa
       value_candidates: valueCandidates.length > 0 ? valueCandidates : (columns[1] ? [columns[1]] : [columns[0]]),
       preview_rows: previewRows,
     };
+  };
+
+  const parseFullCsv = async (f: File, tsCol: string, valCol: string) => {
+    return new Promise<{ timestamp: string; value: number }[]>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result as string;
+          const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+          if (lines.length < 2) return resolve([]);
+          const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+          const tsIdx = headers.indexOf(tsCol);
+          const valIdx = headers.indexOf(valCol);
+          if (tsIdx === -1 || valIdx === -1) return resolve([]);
+
+          const pts: { timestamp: string; value: number }[] = [];
+          for (let i = 1; i < lines.length; i++) {
+            const row = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+            const ts = row[tsIdx];
+            const val = parseFloat(row[valIdx]);
+            if (ts && !isNaN(val)) {
+              pts.push({ timestamp: ts, value: val });
+            }
+          }
+          resolve(pts);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsText(f);
+    });
+  };
+
+  const saveToLocalStorage = (parsedPoints: { timestamp: string; value: number }[], fileName: string) => {
+    try {
+      const values = parsedPoints.map(p => p.value).filter(v => !isNaN(v));
+      const mean = values.reduce((a, b) => a + b, 0) / (values.length || 1);
+      const max = values.length > 0 ? Math.max(...values) : 0;
+      const min = values.length > 0 ? Math.min(...values) : 0;
+      const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (values.length || 1);
+      const std = Math.sqrt(variance);
+
+      const ds = {
+        filename: fileName,
+        total_rows: parsedPoints.length,
+        usable_rows: parsedPoints.length,
+        start_date: parsedPoints[0]?.timestamp || '',
+        end_date: parsedPoints[parsedPoints.length - 1]?.timestamp || '',
+        mean_consumption: mean,
+        max_consumption: max,
+        min_consumption: min,
+        std_consumption: std,
+        points: parsedPoints.slice(-1000), // recent points for instant graphs
+        timestamp: new Date().toISOString(),
+      };
+      localStorage.setItem('enerSight_custom_dataset', JSON.stringify(ds));
+    } catch (e) {
+      console.warn('Could not save to localStorage:', e);
+    }
   };
 
   const handleFileChange = async (selectedFile: File) => {
@@ -114,26 +175,49 @@ export function CsvUploaderModal({ isOpen, onClose, onSuccess }: CsvUploaderModa
     setError(null);
 
     try {
+      // 1. Client-side parse for offline / fast cache
+      const clientPts = await parseFullCsv(file, timestampCol, valueCol).catch(() => []);
+      if (clientPts.length > 0) {
+        saveToLocalStorage(clientPts, file.name);
+      }
+
+      // 2. Post to backend
       const res = await api.applyUpload(file, timestampCol, valueCol);
       setSuccessMsg(`Successfully loaded ${res.rows.toLocaleString()} timesteps as active dataset!`);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('dataset-updated', { detail: res }));
+      }
+
       if (onSuccess) onSuccess();
+      if (onUploadSuccess) onUploadSuccess();
+
       setTimeout(() => {
         onClose();
         setSuccessMsg(null);
         setFile(null);
         setPreviewData(null);
-      }, 2000);
-    } catch (err) {
-      // Local fallback success handling
-      const rowCount = previewData?.total_rows ?? 8760;
-      setSuccessMsg(`Successfully loaded ${rowCount.toLocaleString()} timesteps as active dataset!`);
-      if (onSuccess) onSuccess();
-      setTimeout(() => {
-        onClose();
-        setSuccessMsg(null);
-        setFile(null);
-        setPreviewData(null);
-      }, 2000);
+      }, 1500);
+    } catch (err: any) {
+      console.warn('Backend applyUpload failed, checking client data:', err);
+      const clientPts = await parseFullCsv(file, timestampCol, valueCol).catch(() => []);
+      if (clientPts.length > 0) {
+        saveToLocalStorage(clientPts, file.name);
+        setSuccessMsg(`Loaded ${clientPts.length.toLocaleString()} timesteps in browser telemetry mode!`);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('dataset-updated', { detail: { rows: clientPts.length } }));
+        }
+        if (onSuccess) onSuccess();
+        if (onUploadSuccess) onUploadSuccess();
+        setTimeout(() => {
+          onClose();
+          setSuccessMsg(null);
+          setFile(null);
+          setPreviewData(null);
+        }, 1500);
+      } else {
+        setError(err?.response?.data?.detail || err?.message || 'Failed to apply uploaded dataset.');
+      }
     } finally {
       setApplying(false);
     }

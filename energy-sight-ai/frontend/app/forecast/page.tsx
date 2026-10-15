@@ -45,6 +45,9 @@ export default function ForecastStudioPage() {
 
   useEffect(() => {
     fetchForecast();
+    const handleUpdate = () => fetchForecast();
+    window.addEventListener('dataset-updated', handleUpdate);
+    return () => window.removeEventListener('dataset-updated', handleUpdate);
   }, [model, horizon]);
 
   const predictedVals = forecastData.map((f) => f.predicted ?? 0).filter((v) => v > 0);

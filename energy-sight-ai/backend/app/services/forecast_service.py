@@ -204,3 +204,39 @@ def get_historical_window(
         }
         for _, row in recent.iterrows()
     ]
+
+
+def _dynamic_trend_forecast(clean_df: pd.DataFrame, horizon: str = "24h", target: str = "consumption_kwh") -> list[dict]:
+    """Fallback predictor: computes dynamic trend + diurnal profile directly from uploaded dataframe."""
+    n_steps = HORIZON_HOURS.get(horizon, 24)
+    last_ts = pd.to_datetime(clean_df["timestamp"].iloc[-1])
+    future_timestamps = pd.date_range(
+        start=last_ts + pd.Timedelta(hours=1),
+        periods=n_steps,
+        freq="h",
+    )
+    
+    # Calculate hourly average profile and recent baseline
+    df_copy = clean_df.copy()
+    df_copy["hour"] = pd.to_datetime(df_copy["timestamp"]).dt.hour
+    hourly_means = df_copy.groupby("hour")[target].mean().to_dict()
+    global_mean = float(clean_df[target].mean())
+    recent_mean = float(clean_df[target].tail(48).mean()) if len(clean_df) >= 48 else global_mean
+    std_val = float(clean_df[target].std()) if len(clean_df) > 1 else 2.0
+    scale = (recent_mean / global_mean) if global_mean > 0 else 1.0
+    
+    results = []
+    for i, ts in enumerate(future_timestamps):
+        h = ts.hour
+        base_h = hourly_means.get(h, global_mean) * scale
+        ci = std_val * (1.2 + (i / n_steps) * 0.4)
+        pred = max(0.0, float(base_h))
+        results.append({
+            "timestamp": ts.isoformat(),
+            "predicted": round(pred, 4),
+            "lower_bound": round(max(0.0, pred - ci), 4),
+            "upper_bound": round(pred + ci, 4),
+            "model": "Dynamic Baseline",
+            "type": "forecast",
+        })
+    return results

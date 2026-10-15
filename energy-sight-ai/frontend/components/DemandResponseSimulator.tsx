@@ -31,13 +31,13 @@ interface ForecastPoint {
 }
 
 interface SimulatorProps {
-  forecastData: ForecastPoint[];
+  forecastData?: ForecastPoint[];
   baseCarbonIntensity?: number; // g CO2 / kWh (e.g. 410)
   electricityRate?: number; // $ / kWh (e.g. 0.14)
 }
 
 export function DemandResponseSimulator({
-  forecastData,
+  forecastData = [],
   baseCarbonIntensity = 410,
   electricityRate = 0.14,
 }: SimulatorProps) {

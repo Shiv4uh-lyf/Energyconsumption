@@ -6,6 +6,7 @@ import { HeroEnergyWave } from '@/components/3d/HeroEnergyWave';
 import { ForecastChart } from '@/components/charts/ForecastChart';
 import { DemandResponseSimulator } from '@/components/DemandResponseSimulator';
 import { ExecutiveReportModal } from '@/components/ExecutiveReportModal';
+import { CsvUploaderModal } from '@/components/CsvUploaderModal';
 import { 
   Zap, 
   Share2, 
@@ -26,7 +27,8 @@ import {
   List, 
   CheckSquare, 
   Activity,
-  Check
+  Check,
+  Upload
 } from 'lucide-react';
 import { api, Insight } from '@/lib/api';
 
@@ -39,6 +41,7 @@ export default function OverviewDashboard() {
   const [horizon, setHorizon] = useState<number>(24);
   const [loading, setLoading] = useState<boolean>(true);
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
+  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'wave' | 'chart' | 'simulator'>('wave');
   
   // Dynamic Interactivity States
@@ -112,14 +115,21 @@ export default function OverviewDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const fcRes = await api.getForecast({ model_name: selectedModel, horizon_hours: horizon });
-      setData(fcRes.forecast);
-
       const sumRes = await api.getSummary();
       setSummary(sumRes);
 
+      const fcRes = await api.getForecast({ model_name: selectedModel, horizon_hours: horizon });
+      // If historical context is available, merge it with forecast for complete 3D wave visualization
+      const histPoints = (fcRes.historical || []).map((h: any) => ({
+        timestamp: h.timestamp,
+        actual: h.value,
+        predicted: h.value,
+      }));
+      const combined = histPoints.length > 0 ? [...histPoints, ...(fcRes.forecast || [])] : fcRes.forecast;
+      setData(combined || []);
+
       const anomRes = await api.getAnomalies(100);
-      setAnomalies(anomRes.anomalies);
+      setAnomalies(anomRes.anomalies || []);
     } catch (err) {
       console.error('Failed to load overview data:', err);
     } finally {
@@ -129,10 +139,18 @@ export default function OverviewDashboard() {
 
   useEffect(() => {
     loadData();
+    const handleUpdate = () => {
+      console.log('Dataset updated event received, reloading dashboard...');
+      loadData();
+    };
+    window.addEventListener('dataset-updated', handleUpdate);
+    return () => window.removeEventListener('dataset-updated', handleUpdate);
   }, [selectedModel, horizon]);
 
-  const currentLoad = summary?.statistics?.mean ? (summary.statistics.mean * 12.4).toFixed(1) : '43.8';
+  const meanVal = summary?.mean_consumption ?? summary?.statistics?.mean;
+  const currentLoad = typeof meanVal === 'number' && !isNaN(meanVal) ? meanVal.toFixed(1) : '43.8';
   const anomalyCount = anomalies.length > 0 ? anomalies.length : 11;
+  const isCustomDataset = summary && !summary.is_demo;
 
   return (
     <div className="space-y-6">
@@ -149,6 +167,15 @@ export default function OverviewDashboard() {
               Overall Information
             </h2>
             <div className="flex items-center space-x-2 text-zinc-400 relative">
+              <button
+                onClick={() => setShowUploadModal(true)}
+                title="Upload Custom CSV Telemetry"
+                className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 hover:bg-teal-500/30 text-xs font-bold transition-all"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Upload CSV</span>
+              </button>
+
               <button 
                 onClick={handleShare}
                 title="Share link"
@@ -171,7 +198,11 @@ export default function OverviewDashboard() {
                 </button>
 
                 {overallMenuOpen && (
-                  <div className="absolute right-0 top-7 w-40 bg-[#1c1c24] text-white rounded-2xl shadow-2xl p-2 z-30 space-y-1 text-xs font-bold border border-zinc-700">
+                  <div className="absolute right-0 top-7 w-44 bg-[#1c1c24] text-white rounded-2xl shadow-2xl p-2 z-30 space-y-1 text-xs font-bold border border-zinc-700">
+                    <button onClick={() => { setShowUploadModal(true); setOverallMenuOpen(false); }} className="w-full text-left px-3 py-1.5 hover:bg-zinc-800 rounded-xl text-teal-300 flex items-center space-x-1.5">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload Dataset</span>
+                    </button>
                     <button onClick={() => { loadData(); setOverallMenuOpen(false); }} className="w-full text-left px-3 py-1.5 hover:bg-zinc-800 rounded-xl">
                       Refresh Telemetry
                     </button>
@@ -191,11 +222,18 @@ export default function OverviewDashboard() {
                 {currentLoad} <span className="text-2xl font-semibold text-zinc-400">kWh</span>
               </span>
               <span className="text-xs font-semibold text-zinc-400">
-                Current load demand
+                Average load demand
               </span>
             </div>
-            <p className="text-xs text-zinc-400 font-medium mt-1">
-              <span className="text-white font-bold">2 ML Engines</span> active in production pipeline
+            <p className="text-xs text-zinc-400 font-medium mt-1 flex items-center justify-between">
+              <span>
+                <span className="text-white font-bold">{isCustomDataset ? 'Custom Telemetry' : 'Demo Dataset'}</span> • {summary?.total_rows ? `${summary.total_rows.toLocaleString()} timesteps` : '8,760 timesteps'}
+              </span>
+              {isCustomDataset && (
+                <span className="text-emerald-400 font-bold text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  LIVE UPLOAD ACTIVE
+                </span>
+              )}
             </p>
           </div>
 
@@ -530,7 +568,7 @@ export default function OverviewDashboard() {
         )}
 
         {activeTab === 'simulator' && (
-          <DemandResponseSimulator />
+          <DemandResponseSimulator forecastData={data} />
         )}
       </div>
 
@@ -631,6 +669,14 @@ export default function OverviewDashboard() {
       <ExecutiveReportModal
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
+      />
+
+      {/* CSV Telemetry Uploader Modal */}
+      <CsvUploaderModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onSuccess={loadData}
+        onUploadSuccess={loadData}
       />
 
     </div>

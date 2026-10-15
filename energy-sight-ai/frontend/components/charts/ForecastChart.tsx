@@ -22,18 +22,23 @@ interface ForecastDataPoint {
 }
 
 interface ForecastChartProps {
-  data: ForecastDataPoint[];
+  data: any[];
   title?: string;
   height?: number;
   showCI?: boolean;
+  horizon?: number | string;
+  selectedModel?: string;
 }
 
 export function ForecastChart({
   data = [],
-  title = 'Load Forecast (kW)',
+  title,
   height = 360,
   showCI = true,
+  horizon,
+  selectedModel,
 }: ForecastChartProps) {
+  const chartTitle = title || (selectedModel ? `${selectedModel} Load Forecast (${horizon || 24}h)` : 'Load Forecast (kW)');
   const safeData = Array.isArray(data) ? data : [];
   const formattedData = safeData.map((d: any) => {
     const lower = d.lower_ci ?? d.lower_bound ?? undefined;
@@ -49,10 +54,10 @@ export function ForecastChart({
 
   return (
     <div className="w-full bg-[#121212] p-5 rounded-2xl border border-zinc-800 shadow-xl text-white">
-      {title && (
+      {chartTitle && (
         <div className="flex items-center justify-between mb-4 border-b border-zinc-800 pb-3">
           <h3 className="font-extrabold text-sm text-white uppercase tracking-wider">
-            {title}
+            {chartTitle}
           </h3>
           <span className="text-xs font-bold text-teal-300 bg-teal-500/20 px-2.5 py-1 rounded-full border border-teal-500/40">
             {data.length} TIMESTEPS

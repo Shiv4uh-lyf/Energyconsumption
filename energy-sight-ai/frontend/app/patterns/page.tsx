@@ -42,6 +42,9 @@ export default function PatternExplorerPage() {
 
   useEffect(() => {
     fetchPatterns();
+    const handleUpdate = () => fetchPatterns();
+    window.addEventListener('dataset-updated', handleUpdate);
+    return () => window.removeEventListener('dataset-updated', handleUpdate);
   }, []);
 
   const peakHour = patterns?.peak_hour ?? 18;

@@ -23,18 +23,21 @@ interface ModelMetric {
 }
 
 interface ModelComparisonChartProps {
-  metrics: ModelMetric[];
+  metrics: any[];
   selectedMetric?: 'mae' | 'rmse' | 'mape' | 'r2';
+  activeMetric?: 'mae' | 'rmse' | 'mape' | 'r2';
 }
 
 export function ModelComparisonChart({
   metrics = [],
-  selectedMetric = 'mae',
+  selectedMetric,
+  activeMetric,
 }: ModelComparisonChartProps) {
+  const metricKey = activeMetric || selectedMetric || 'mae';
   const safeMetrics = Array.isArray(metrics) ? metrics : [];
   const sorted = [...safeMetrics].sort((a, b) => {
-    if (selectedMetric === 'r2') return b.r2 - a.r2; // higher is better
-    return a[selectedMetric] - b[selectedMetric]; // lower is better
+    if (metricKey === 'r2') return (b.r2 || 0) - (a.r2 || 0); // higher is better
+    return (a[metricKey] || 0) - (b[metricKey] || 0); // lower is better
   });
 
   const getMetricLabel = (key: string) => {

@@ -20,6 +20,13 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "backend"))
 warnings.filterwarnings("ignore")
 
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 import numpy as np
 import pandas as pd
 
@@ -65,7 +72,7 @@ def main():
     is_demo = meta.get("is_demo", True)
     print(f"  Loaded {len(df)} rows. Demo data: {is_demo}")
     if is_demo:
-        print("  ⚠  Using SYNTHETIC DEMO DATA — not real-world measurements")
+        print("  [!] Using SYNTHETIC DEMO DATA -- not real-world measurements")
     
     # ── Step 2: Feature Engineering ──
     print("\n[2/7] Engineering features...")
@@ -97,7 +104,7 @@ def main():
     
     # ── Step 5: Train each model ──
     for model_name in all_models_to_train:
-        print(f"\n  ▶ Training {model_name}...")
+        print(f"\n  -> Training {model_name}...")
         t_start = time.time()
         
         try:
@@ -135,7 +142,7 @@ def main():
                 model.train(split.X_train, split.y_train)
             
             else:
-                print(f"  ⚠ Unknown model: {model_name}, skipping")
+                print(f"  [!] Unknown model: {model_name}, skipping")
                 continue
             
             # Evaluate on test set
@@ -246,18 +253,18 @@ def main():
     
     metrics_data = [m.to_dict() for m in all_metrics]
     with open(MODELS_DIR_OUT / "metrics.json", "w") as f:
-        json.dump(metrics_data, f, indent=2)
-    print(f"\n  ✓ Metrics saved → {MODELS_DIR_OUT / 'metrics.json'}")
+        json.dump(metrics_data, f, indent=2, default=str)
+    print(f"\n  [OK] Metrics saved -> {MODELS_DIR_OUT / 'metrics.json'}")
     
     # Save split info
     split_info = {
         **split_summary(split),
         "feature_cols": feature_cols,
-        "is_demo": is_demo,
+        "is_demo": bool(is_demo),
         "trained_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
     }
     with open(MODELS_DIR_OUT / "training_info.json", "w") as f:
-        json.dump(split_info, f, indent=2)
+        json.dump(split_info, f, indent=2, default=str)
     
     print("\n" + "=" * 60)
     print(f"  Training complete! {len(all_metrics)} models trained.")

@@ -50,6 +50,9 @@ export default function DataHealthPage() {
 
   useEffect(() => {
     fetchSummary();
+    const handleUpdate = () => fetchSummary();
+    window.addEventListener('dataset-updated', handleUpdate);
+    return () => window.removeEventListener('dataset-updated', handleUpdate);
   }, []);
 
   const numRows = summary?.total_rows ?? summary?.num_rows ?? 8760;
@@ -187,6 +190,7 @@ export default function DataHealthPage() {
       <CsvUploaderModal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
+        onSuccess={fetchSummary}
         onUploadSuccess={fetchSummary}
       />
 
