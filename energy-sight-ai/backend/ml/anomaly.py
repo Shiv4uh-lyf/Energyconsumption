@@ -95,7 +95,7 @@ def isolation_forest_anomalies(
         "dow": pd.to_datetime(timestamps).dayofweek if hasattr(pd.to_datetime(timestamps), 'dayofweek') else [pd.Timestamp(t).dayofweek for t in timestamps],
         "roll_mean": series.rolling(24, min_periods=6).mean(),
         "roll_std": series.rolling(24, min_periods=6).std(),
-    }).fillna(method="bfill").fillna(0)
+    }).bfill().fillna(0)
     
     iso = IsolationForest(contamination=contamination, random_state=42, n_jobs=-1)
     labels = iso.fit_predict(feat_df.values)  # -1 = anomaly, 1 = normal

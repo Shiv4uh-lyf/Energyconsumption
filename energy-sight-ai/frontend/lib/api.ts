@@ -3,11 +3,12 @@
 
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// When NEXT_PUBLIC_API_URL is empty, use relative paths - Next.js rewrites will proxy to backend.
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 
 export const axiosInstance = axios.create({
   baseURL: API_BASE,
-  timeout: 10000,
+  timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -260,7 +261,7 @@ function generateFallbackEvaluation(): ModelEvaluation {
 function generateFallbackAnomalies(): AnomalyResponse {
   const now = new Date();
   const list: Anomaly[] = [];
-  const severities: ('HIGH' | 'MEDIUM' | 'NORMAL')[] = ['HIGH', 'MEDIUM', 'HIGH', 'MEDIUM'];
+  const severities: ('HIGH' | 'UNUSUAL' | 'NORMAL')[] = ['HIGH', 'UNUSUAL', 'HIGH', 'UNUSUAL'];
   for (let i = 0; i < 12; i++) {
     const t = new Date(now.getTime() - i * 4 * 3600 * 1000);
     const sev = severities[i % severities.length];

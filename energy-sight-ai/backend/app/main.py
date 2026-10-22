@@ -2,6 +2,7 @@
 EnerSight AI — FastAPI Main Application
 """
 
+import os
 import sys
 import json
 import logging
@@ -49,13 +50,49 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+ALLOWED_ORIGINS = [
+    o.strip()
+    for o in (os.environ.get("CORS_ORIGINS", "") or "").split(",")
+    if o.strip()
+] or [
+    "https://energysight-frontend.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Log startup diagnostics so deployment failures are visible."""
+    logger.info("=" * 60)
+    logger.info("EnerSight AI API starting up")
+    logger.info(f"  DATA_DIR   : {DATA_DIR} (exists={DATA_DIR.exists()})")
+    logger.info(f"  MODELS_DIR : {MODELS_DIR} (exists={MODELS_DIR.exists()})")
+    logger.info(f"  CORS origins: {ALLOWED_ORIGINS}")
+
+    data_csv = DATA_DIR / "consumption.csv"
+    demo_csv = DATA_DIR / "demo_consumption.csv"
+    if data_csv.exists():
+        logger.info(f"  Data source: {data_csv} (REAL data)")
+    elif demo_csv.exists():
+        logger.info(f"  Data source: {demo_csv} (DEMO data)")
+    else:
+        logger.warning("  No data file found — endpoints requiring data will return HTTP 503")
+
+    trained = list_trained_models()
+    if trained:
+        logger.info(f"  Trained models found: {trained}")
+    else:
+        logger.warning("  No trained model files found in trained_models/")
+    logger.info("=" * 60)
 
 # ─── App State ───
 DATA_DIR = Path(__file__).parent.parent / "data"
@@ -119,6 +156,20 @@ def get_patterns() -> dict:
     return _state["patterns"]
 
 
+# ─── Root Route ───
+
+@app.get("/")
+def root():
+    """API root — confirms service is alive."""
+    return {
+        "message": "EnerSight AI API",
+        "status": "ok",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/api/health",
+    }
+
+
 # ─── Routes ───
 
 @app.get("/api/health", response_model=HealthResponse)
@@ -153,9 +204,9 @@ def data_summary():
     df = get_df()
     meta = _state.get("meta", {})
     report = dict(meta.get("report", {}))
-    is_demo = meta.get("is_demo", True)
+    is_demo = bool(meta.get("is_demo", True))
     report["is_demo"] = is_demo
-    report["data_source"] = meta.get("source", "Custom Uploaded Dataset" if not is_demo else "Synthetic Energy Dataset")
+    report["data_source"] = str(meta.get("source", "Custom Uploaded Dataset" if not is_demo else "Synthetic Energy Dataset"))
     
     mean_val = float(report.get("mean_consumption", df["consumption_kwh"].mean()))
     max_val = float(report.get("max_consumption", df["consumption_kwh"].max()))
@@ -168,14 +219,25 @@ def data_summary():
         "min": round(min_val, 4),
         "std": round(std_val, 4),
     }
-    report["num_rows"] = len(df)
-    report["total_rows"] = len(df)
-    report["usable_rows"] = len(df)
+    report["num_rows"] = int(len(df))
+    report["total_rows"] = int(len(df))
+    report["usable_rows"] = int(len(df))
     report["mean_consumption"] = round(mean_val, 4)
     report["max_consumption"] = round(max_val, 4)
     report["min_consumption"] = round(min_val, 4)
     report["std_consumption"] = round(std_val, 4)
-    return report
+    # Ensure all report fields are python primitives
+    clean_report = {}
+    for k, v in report.items():
+        if isinstance(v, (np.bool_, bool)):
+            clean_report[k] = bool(v)
+        elif isinstance(v, (np.integer, int)):
+            clean_report[k] = int(v)
+        elif isinstance(v, (np.floating, float)):
+            clean_report[k] = float(v)
+        else:
+            clean_report[k] = v
+    return clean_report
 
 
 @app.get("/api/data/consumption")
@@ -186,7 +248,7 @@ def consumption(
     resample: Optional[str] = Query(default=None, description="e.g. '1D' to resample to daily"),
 ):
     df = get_df()
-    is_demo = _state.get("meta", {}).get("is_demo", True)
+    is_demo = bool(_state.get("meta", {}).get("is_demo", True))
     
     if start:
         df = df[df["timestamp"] >= pd.to_datetime(start)]
@@ -203,7 +265,7 @@ def consumption(
         {"timestamp": str(row["timestamp"]), "value": round(float(row["consumption_kwh"]), 4), "type": "historical"}
         for _, row in df.iterrows()
     ]
-    return {"data": data, "total": len(data), "is_demo": is_demo}
+    return {"data": data, "total": len(data), "is_demo": bool(is_demo)}
 
 
 @app.get("/api/analytics/patterns")
@@ -497,7 +559,16 @@ def download_anomalies():
 def _run_retrain_task():
     _state["is_retraining"] = True
     try:
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "train_models.py"
+        # Scripts may be at  <repo_root>/scripts/train_models.py
+        # main.py lives at   <repo_root>/backend/app/main.py
+        # So repo root is two levels up from this file.
+        repo_root = Path(__file__).parent.parent.parent
+        script_path = repo_root / "scripts" / "train_models.py"
+        if not script_path.exists():
+            # Fallback: maybe we're running inside the backend dir directly
+            script_path = Path(__file__).parent.parent / "scripts" / "train_models.py"
+        if not script_path.exists():
+            raise FileNotFoundError(f"train_models.py not found. Searched: {script_path}")
         subprocess.run([sys.executable, str(script_path), "--fast"], check=True)
         # Clear model & metric caches
         _state["models"] = {}

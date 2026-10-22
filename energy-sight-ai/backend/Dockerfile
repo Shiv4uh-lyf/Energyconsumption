@@ -1,30 +1,35 @@
 # Production Dockerfile for EnerSight AI FastAPI Backend
-FROM python:3.10-slim
+# Build context: backend/ directory (used by docker-compose)
+# For full-stack Docker, use the root Dockerfile instead.
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy backend requirements and install
+# Copy and install Python dependencies first (cache layer)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend application source and scripts
+# Copy backend source
 COPY . /app/backend
-COPY ../scripts /app/scripts
 
+# Copy scripts (must be placed next to backend when using docker-compose context)
+# docker-compose.yml must set context: . (repo root) for this to work, or
+# scripts must be pre-copied into the backend directory.
+# If scripts/ is not available, demo data will be generated at runtime.
 WORKDIR /app/backend
 
-# Generate demo data & pre-train models if missing
-RUN python /app/scripts/generate_demo_data.py || true
-RUN python /app/scripts/train_models.py || true
+# Generate demo data if scripts are available (optional — safe to skip)
+RUN if [ -f /app/scripts/generate_demo_data.py ]; then \
+      python /app/scripts/generate_demo_data.py; \
+    fi
 
 EXPOSE 8000
-
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

@@ -1,32 +1,45 @@
 # Render Blueprint Specification for EnerSight AI
-# Full-Stack Deployment (FastAPI Backend + Next.js Frontend)
+# Two separate Web Services: FastAPI Backend + Next.js Frontend
 
 services:
-  # 1. Python FastAPI Backend Service
+  # ── 1. Python FastAPI Backend ──────────────────────────────────────────────
   - type: web
     name: energysight-backend
     env: python
     region: oregon
     plan: free
     rootDir: backend
-    buildCommand: pip install -r requirements.txt && python ../scripts/generate_demo_data.py && python ../scripts/train_models.py
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python ../scripts/generate_demo_data.py &&
+      python ../scripts/train_models.py --skip-lstm --fast
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.12
+        value: "3.11.0"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # Optional: comma-separated extra CORS origins
+      # - key: CORS_ORIGINS
+      #   value: "https://energysight-frontend.onrender.com"
 
-  # 2. Next.js Frontend Web Service
+  # ── 2. Next.js Frontend Web Service ───────────────────────────────────────
   - type: web
     name: energysight-frontend
     env: node
     region: oregon
     plan: free
     rootDir: frontend
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci && npm run build
     startCommand: npm start
     envVars:
+      # NEXT_PUBLIC_API_URL is baked into the browser bundle at build time.
+      # Set this to the backend's public Render URL before deploying.
+      # Format: https://energysight-backend.onrender.com  (no trailing slash)
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: energysight-backend
-          property: hostport
+        value: "https://energysight-backend.onrender.com"
+      # BACKEND_INTERNAL_URL is used by Next.js server-side rewrites.
+      # Use the Render internal URL (private service-to-service) if available,
+      # otherwise fall back to the public URL.
+      - key: BACKEND_INTERNAL_URL
+        value: "https://energysight-backend.onrender.com"

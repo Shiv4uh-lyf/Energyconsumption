@@ -247,7 +247,10 @@ def load_clean_data(data_dir: Path = DATA_DIR) -> tuple[pd.DataFrame, dict]:
     df, meta = load_data(data_dir)
     clean_df, report = clean_and_prepare(df)
     meta["report"] = report.to_dict()
-    meta["is_demo"] = "is_demo" in df.columns and df["is_demo"].any() if "is_demo" in df.columns else meta.get("is_demo", True)
+    is_demo_flag = bool("is_demo" in df.columns and bool(df["is_demo"].any())) if "is_demo" in df.columns else bool(meta.get("is_demo", True))
+    meta["is_demo"] = bool(is_demo_flag)
+    report.is_demo = bool(is_demo_flag)
+    meta["report"]["is_demo"] = bool(is_demo_flag)
     return clean_df, meta
 
 

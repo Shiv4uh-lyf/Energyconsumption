@@ -44,3 +44,12 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Real user data — do NOT commit real consumption data
+backend/data/consumption.csv
+
+# Uploaded user datasets (runtime only)
+backend/data/uploaded_*.csv
+
+# NOTE: backend/data/demo_consumption.csv IS committed (synthetic, safe)
+# NOTE: backend/trained_models/*.joblib ARE committed (needed on Render)

@@ -54,7 +54,7 @@ export function ModelComparisonChart({
     <div className="w-full bg-graphite-950 p-4 rounded-xl border border-graphite-800/80 shadow-xl">
       <div className="flex items-center justify-between mb-4 border-b border-graphite-800 pb-2">
         <h3 className="font-mono text-xs text-graphite-200 uppercase tracking-wider font-semibold">
-          Model Accuracy Arena Benchmark — {getMetricLabel(selectedMetric)}
+          Model Accuracy Arena Benchmark — {getMetricLabel(metricKey)}
         </h3>
         <span className="font-mono text-[10px] text-cyan-400">
           Lower is better (except R²)
@@ -86,11 +86,11 @@ export function ModelComparisonChart({
                 fontFamily: 'monospace',
               }}
               formatter={(val: number) => [
-                selectedMetric === 'mape' ? `${val.toFixed(2)}%` : val.toFixed(3),
-                selectedMetric.toUpperCase(),
+                metricKey === 'mape' ? `${val.toFixed(2)}%` : val.toFixed(3),
+                metricKey.toUpperCase(),
               ]}
             />
-            <Bar dataKey={selectedMetric} radius={[0, 4, 4, 0]}>
+            <Bar dataKey={metricKey} radius={[0, 4, 4, 0]}>
               {sorted.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}

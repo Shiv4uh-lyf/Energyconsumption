@@ -11,11 +11,16 @@ services:
     region: oregon
     plan: free
     rootDir: energy-sight-ai/backend
-    buildCommand: pip install -r requirements.txt && python ../scripts/generate_demo_data.py && python ../scripts/train_models.py
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python ../scripts/generate_demo_data.py &&
+      python ../scripts/train_models.py --skip-lstm --fast
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: "3.10.12"
+        value: "3.11.0"
+      - key: PYTHONUNBUFFERED
+        value: "1"
 
   # ── 2. Next.js Frontend ────────────────────────────────────
   - type: web
@@ -30,12 +35,6 @@ services:
       - key: NODE_VERSION
         value: "20"
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: energysight-backend
-          property: hostport
+        value: "https://energysight-backend.onrender.com"
       - key: BACKEND_INTERNAL_URL
-        fromService:
-          type: web
-          name: energysight-backend
-          property: hostport
+        value: "https://energysight-backend.onrender.com"

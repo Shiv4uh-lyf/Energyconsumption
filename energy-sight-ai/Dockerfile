@@ -1,44 +1,35 @@
-# Full-Stack Production Dockerfile for EnerSight AI on Render / Docker
-FROM python:3.10-slim
+# Production Dockerfile for EnerSight AI FastAPI Backend
+# Build context: repository root (energy-sight-ai/)
+# Usage: docker build -f Dockerfile -t energysight-backend .
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install Node.js, npm, and system build tools
+# Install system build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
     build-essential \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python backend dependencies
+# Copy and install Python dependencies first (cache layer)
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
-# Copy backend source & scripts
+# Copy backend source and scripts
 COPY backend /app/backend
 COPY scripts /app/scripts
 
-# Pre-generate dataset & pre-train ML models during build phase
+# Set working directory to backend for data/model generation
 WORKDIR /app/backend
+
+# Generate demo data and pre-train models (skip LSTM — too slow for build)
 RUN python /app/scripts/generate_demo_data.py
-RUN python /app/scripts/train_models.py
+RUN python /app/scripts/train_models.py --skip-lstm --fast
 
-# Install Node frontend dependencies & build Next.js app
-COPY frontend /app/frontend
-WORKDIR /app/frontend
-RUN npm install
-RUN npm run build
+EXPOSE 8000
 
-# Copy & set permissions for Render runner script
-COPY start_render.sh /app/start_render.sh
-RUN chmod +x /app/start_render.sh
-
-WORKDIR /app
-
-EXPOSE 10000
-
-ENV PORT=10000
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
 
-CMD ["/app/start_render.sh"]
+# Run from backend dir so relative imports resolve correctly
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

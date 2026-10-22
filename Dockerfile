@@ -4,7 +4,7 @@
 # App lives in: energy-sight-ai/
 # ============================================================
 
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -24,10 +24,10 @@ RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 COPY energy-sight-ai/backend /app/backend
 COPY energy-sight-ai/scripts /app/scripts
 
-# Pre-generate dataset & train ML models at build time
+# Pre-generate dataset & train ML models at build time (fast mode, skip LSTM)
 WORKDIR /app/backend
 RUN python /app/scripts/generate_demo_data.py
-RUN python /app/scripts/train_models.py
+RUN python /app/scripts/train_models.py --skip-lstm --fast
 
 # ── Next.js frontend: install & build ──────────────────────
 COPY energy-sight-ai/frontend/package*.json /app/frontend/
