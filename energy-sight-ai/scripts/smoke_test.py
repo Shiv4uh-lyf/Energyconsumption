@@ -123,8 +123,8 @@ def main():
         print(f"  Testing {name:<28} ... ", end="", flush=True)
         res = run_check(name, method, url, expected_status=code, json_payload=payload, timeout=args.timeout)
         results.append(res)
-        color_mark = "✓" if res["status"] == "PASS" else "✗"
-        print(f"[{color_mark} {res['status']}]  ({res['latency_ms']:.0f} ms)")
+        color_mark = "OK" if res["status"] == "PASS" else "FAIL"
+        print(f"[{color_mark}] ({res['latency_ms']:.0f} ms)")
         if res["error"]:
             print(f"      -> Reason: {res['error']}")
 
