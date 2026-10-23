@@ -1,0 +1,72 @@
+name: EnerSight AI CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-backend:
+    name: Backend Validation & Pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "energy-sight-ai/backend/requirements.txt"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r energy-sight-ai/backend/requirements.txt
+          pip install pytest httpx
+
+      - name: Pre-generate demo dataset & ML models
+        run: |
+          cd energy-sight-ai/backend
+          python ../scripts/generate_demo_data.py
+          python ../scripts/train_models.py --skip-lstm --fast
+
+      - name: Run automated test suite
+        run: |
+          cd energy-sight-ai/backend
+          python -m pytest tests/test_api.py -v --tb=short
+
+  build-frontend:
+    name: Frontend TypeScript & Next.js Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: "energy-sight-ai/frontend/package-lock.json"
+
+      - name: Install dependencies
+        run: |
+          cd energy-sight-ai/frontend
+          npm ci
+
+      - name: TypeScript typecheck
+        run: |
+          cd energy-sight-ai/frontend
+          npx tsc --noEmit
+
+      - name: Build Next.js application
+        env:
+          NEXT_PUBLIC_API_URL: "https://energysight-backend.onrender.com"
+        run: |
+          cd energy-sight-ai/frontend
+          npm run build
